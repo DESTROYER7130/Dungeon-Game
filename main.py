@@ -114,7 +114,8 @@ class Level_1:
                 'fighter run': [10, 11, 12, 13, 14, 15, 16, 17],
                 'fighter jump': [20],
                 'fighter attack': [30, 31, 32, 33, 34, 35, 36],
-                'fighter special attack': [40, 41, 42, 43, 44, 45, 46],
+                'fighter alt attack': [40, 41, 42, 43, 44, 45, 46],
+                'fighter special attack': [21, 22, 23, 24, 25, 26, 27, 28],
                 'boss idle': [0, 1, 2, 3, 4, 5, 6, 7],
                 'boss run': [8, 9, 10, 11, 12, 13, 14, 15],
                 'boss attack': [32, 33, 34, 35, 36, 37, 38, 39],
@@ -340,7 +341,7 @@ class Level_1:
         #attack animation stuff
         if self.fighter_attacking:
             if self.fighter_attacking == 1:
-                self.fighter_animation = self.animations['fighter attack']
+                self.fighter_animation = self.animations[choice(('fighter attack', 'fighter alt attack'))]
             if self.fighter_attacking == 2:
                 self.fighter_animation = self.animations['fighter special attack']
             if self.fighter_frame > len(self.fighter_animation):
