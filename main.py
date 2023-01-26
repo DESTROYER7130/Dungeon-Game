@@ -1,4 +1,5 @@
 from typing import List
+from random import choice
 
 import pygame
 from pygame.locals import K_ESCAPE, KEYDOWN, QUIT
@@ -23,6 +24,23 @@ def boss_ai(boss_move, boss_x, fighter_x, boss_speed, fighter_speed):
         boss_speed += 1
     return boss_move, boss_x, boss_speed
 
+def get_sprite_frames(sprite_sheet, sprite_frame_size):
+
+    sprite_sheet_width, sprite_sheet_height = sprite_sheet.get_size()
+    sprite_frame_width, sprite_frame_height = sprite_frame_size
+
+    sprite_rows = int(sprite_sheet_height / sprite_frame_height)
+    sprite_cols = int(sprite_sheet_width / sprite_frame_width)
+
+    sprite_frames = []
+
+    for row in range(sprite_rows):
+        for col in range(sprite_cols):
+            section = (col * sprite_frame_height, row * sprite_frame_width, sprite_frame_width, sprite_frame_height)
+            sprite_frame = sprite_sheet.subsurface(section)
+            sprite_frames.append(sprite_frame)
+
+    return sprite_frames
 
 class ScreenInterface:
 
@@ -80,22 +98,38 @@ class Level_1:
         # <a href="https://www.freepik.com/free-vector/ancient-architecture-with-arches-torches_22444977.htm#query=dungeon%20background&position=0&from_view=keyword">Image by upklyak</a> on Freepik
 
         #sprite sheets
-        self.fighter_sprite = pygame.image.load('assets/fighter.png')
+        fighter_sprite_sheet = pygame.image.load('assets/fighter.png')
         # LuizMelo
-        self.boss_sprite = pygame.image.load('assets/boss.png')
+        boss_sprite_sheet = pygame.image.load('assets/boss.png')
         # LuizMelo
+
+        #load sprite frames
+        self.fighter_sprite_frames = get_sprite_frames(fighter_sprite_sheet, (162, 162))
+        self.boss_sprite_frames = get_sprite_frames(boss_sprite_sheet, (250, 250))
         
         # list for sprite animation
-        self.fighter_animation = [10, 8, 1, 7, 7, 3, 7]
-        self.boss_animation = [8, 8, 1, 8, 8, 3, 7]
+        self.animations = {
+                'fighter idle': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                'fighter run': [10, 11, 12, 13, 14, 15, 16, 17],
+                'fighter jump': [20],
+                'fighter attack': [30, 31, 32, 33, 34, 35, 36],
+                'fighter special attack': [40, 41, 42, 43, 44, 45, 46],
+                'boss idle': [0, 1, 2, 3, 4, 5, 6, 7],
+                'boss run': [8, 9, 10, 11, 12, 13, 14, 15],
+                'boss attack': [32, 33, 34, 35, 36, 37, 38, 39]
+                }
 
         #boss theme!!
         pygame.mixer.init()
-        self.bg_music = pygame.mixer.Sound('assets/boss_music.wav') # https://www.youtube.com/watch?v=1dSilEmz7FE
-        self.bg_music.set_volume(1)
+        self.bg_music = pygame.mixer.Sound('assets/theme.wav') # https://www.youtube.com/watch?v=1dSilEmz7FE
+        self.hits = []
+        for i in range(4):
+            self.hits.append(pygame.mixer.Sound(f'assets/hit_{i}.wav'))
+
         self.bg_music.play(-1)
 
         # variables
+        self.frame = 0
         self.base_font = pygame.font.Font(None, 35)
         self.base_font2 = pygame.font.Font(None, 35)
         self.text_surface = self.base_font.render('GEORGE THE EATER OF WORLDS', True, (255, 255, 255))
@@ -120,6 +154,11 @@ class Level_1:
         self.fighter_hit = False
         self.boss_alive = True
         self.fighter_alive = True
+        self.fighter_animation = self.animations['fighter idle']
+        self.boss_animation = self.animations['boss run']
+        self.fighter_direction = 0
+        self.boss_direction = 0
+        self.fighter_attacking = 0
 
         '''
         # Create a list to hold the individual sprites
@@ -171,10 +210,10 @@ class Level_1:
 
         '''
         # Extract the individual sprites from the sprite sheet and add them to the sprites list 
-        for self.row in range(self.rows):
+        for row in range(self.rows):
             for col in range(self.columns):
                 x = col * self.sprite_width
-                y = self.row * self.sprite_height
+                y = row * self.sprite_height
                 sprite = self.fighter_sprite.subsurface((x, y, self.sprite_width, self.sprite_height))
                 self.sprites.append(sprite)
         '''
@@ -184,6 +223,7 @@ class Level_1:
             print('fighter wins')
             print(f'boss hp: {self.boss_hp}, fighter hp: {self.fighter_hp}')
             self.boss_alive = False
+            self.boss_animation = self.animations['boss run']
             #exit()
 
         if self.fighter_hp <= 0:
@@ -196,9 +236,13 @@ class Level_1:
         # boss
         if self.boss_alive:
             self.boss_move, self.boss_x, self.boss_speed = boss_ai(self.boss_move, self.boss_x, self.fighter_x, self.boss_speed, self.fighter_speed)
+            self.boss_direction = sign(self.boss_move)
             if distance < 100:
+                self.boss_animation = self.animations['boss attack']
                 self.fighter_hit = True
                 self.fighter_hp -= 1
+            else:
+                self.boss_animation = self.animations['boss run']
 
 
         # keypress
@@ -206,10 +250,15 @@ class Level_1:
 
         if self.fighter_alive:
             # left, right movement
-            if keys[pygame.K_a]:
-                self.fighter_x -= self.fighter_speed
-            if keys[pygame.K_d]:
-                self.fighter_x += self.fighter_speed 
+            self.fighter_animation = self.animations['fighter idle']
+            if keys[pygame.K_a] or keys[pygame.K_d]:
+                self.fighter_animation = self.animations['fighter run']
+                if keys[pygame.K_a]:
+                    self.fighter_direction = -1
+                    self.fighter_x -= self.fighter_speed
+                if keys[pygame.K_d]:
+                    self.fighter_direction = 1
+                    self.fighter_x += self.fighter_speed 
 
             # jump
             if keys[pygame.K_SPACE] and self.jumping == False:
@@ -223,6 +272,7 @@ class Level_1:
                 if keys[pygame.K_s]:
                     self.attack_type = 2
                     self.attack_cooldown = 100
+
 
         # stay on screen
         if self.fighter_y >= 1080:
@@ -240,6 +290,7 @@ class Level_1:
         # Written by tyler wen.
         # tylers_cpt.py?
         if self.jumping:
+            self.fighter_animation = self.animations['fighter jump']
             self.fighter_y -= self.jump_height * 3
             self.jump_height -= 1
             if self.jump_height < -10:
@@ -249,13 +300,27 @@ class Level_1:
 
         #attacking/dmg
         if self.attack_type:
+            self.fighter_attacking = self.attack_type
+            self.frame = 0
             if distance < 300:
                 self.attack_radius = 200
                 self.attack_effect = self.attack_type
+                choice(self.hits).play()
                 if self.attack_type == 2:
                     self.boss_speed = 1
                 self.boss_hp -= 2
             self.attack_type = 0
+
+
+        #attack animation stuff
+        if self.fighter_attacking:
+            if self.fighter_attacking == 1:
+                self.fighter_animation = self.animations['fighter attack']
+            if self.fighter_attacking == 2:
+                self.fighter_animation = self.animations['fighter special attack']
+            if self.frame > len(self.fighter_animation):
+                self.fighter_attacking = 0
+
 
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -271,8 +336,20 @@ class Level_1:
         surface.blit(self.text_surface, (1370, 37)) # boss health name
         surface.blit(self.text_surface2, (30, 37)) # fighter health name
 
-        pygame.draw.rect(surface, (0, 0, 255), (self.fighter_x, self.fighter_y, 125, 250)) # main fighter character
-        pygame.draw.rect(surface, (0, 255, 0), (self.boss_x, self.boss_y, 125, 250)) # the boss
+        # pygame.draw.rect(surface, (0, 0, 255), (self.fighter_x, self.fighter_y, 125, 250)) # main fighter character
+        # pygame.draw.rect(surface, (0, 255, 0), (self.boss_x, self.boss_y, 125, 250)) # the boss
+
+        fighter_frame = self.fighter_animation[int(self.frame % len(self.fighter_animation))]
+        fighter_sprite_frame = self.fighter_sprite_frames[int(fighter_frame)]
+        fighter_sprite_frame = pygame.transform.scale(fighter_sprite_frame, (648, 648))
+        fighter_sprite_frame = pygame.transform.flip(fighter_sprite_frame, self.fighter_direction == -1, False)
+        surface.blit(fighter_sprite_frame, (self.fighter_x - 324, self.fighter_y - 140))
+
+        boss_frame = self.boss_animation[int(self.frame % len(self.boss_animation))]
+        boss_sprite_frame = self.boss_sprite_frames[int(boss_frame)]
+        boss_sprite_frame = pygame.transform.scale(boss_sprite_frame, (1000, 1000))
+        boss_sprite_frame = pygame.transform.flip(boss_sprite_frame, self.boss_direction == -1, False)
+        surface.blit(boss_sprite_frame, (self.boss_x - 500, self.boss_y - 400))
         
         # surface.blit(self.fighter_sprite, (self.fighter_x, self.fighter_y, 125, 250)) # main fighter character
 
@@ -281,18 +358,18 @@ class Level_1:
         # surface.blit(self.boss_sprite, (self.boss_x, self.boss_y, 125, 250)) # the boss
 
         #attack circle effects/ hit markers
-        attack_color = []
-        attack_color.append((255, 0, 0))
-        attack_color.append((255, 255, 0))
+        attack_color = [(255, 0, 0), (255, 255, 0)]
         if self.fighter_hit:
             self.fighter_hit = False
             pygame.draw.circle(surface, (255, 255, 255), (self.fighter_x, self.fighter_y), 100)
         if self.attack_effect:
-            pygame.draw.circle(surface, attack_color[self.attack_effect - 1], (self.boss_x, self.boss_y), self.attack_radius)
+            #pygame.draw.circle(surface, attack_color[self.attack_effect - 1], (self.boss_x, self.boss_y), self.attack_radius)
             if self.attack_radius > 0:
                 self.attack_radius -= 5
             else:
                 self.attack_effect = 0
+
+        self.frame += .7
         
 
 #================================================================================================
