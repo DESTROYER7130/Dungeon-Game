@@ -422,6 +422,7 @@ class main_menu:
                             Game.set_screen(Level_1())
                 if event.type == MOUSEBUTTONDOWN:
                     if self.game2_button.collidepoint((mx, my)):
+                        self.bg_music.stop()
                         Game.set_screen(instructions())
 
 
