@@ -142,6 +142,7 @@ class Level_1:
         self.magics[-1].play(-1)
         self.magics[-1].set_volume(0)
         self.special_hit = pygame.mixer.Sound('assets/special_hit.wav')
+        self.toggle = pygame.mixer.Sound('assets/toggle.wav')
 
         self.bg_music.play(-1)
 
@@ -268,8 +269,11 @@ class Level_1:
                     self.attack_cooldown = 100
         if keys[pygame.K_i] and keys[pygame.K_a] and keys[pygame.K_n]:
             self.mortal = False
+            self.background = pygame.image.load('assets/background.jpeg')
+            self.toggle.play()
         if keys[pygame.K_t] and keys[pygame.K_a] and keys[pygame.K_n]:
             self.mortal = True
+            self.toggle.play()
 
 
         # stay on screen
@@ -282,6 +286,7 @@ class Level_1:
                 self.fighter_x -= self.fighter_speed
             else:
                 Game.set_screen(win(self.fighter_hp, self.boss_hp))
+
 
         
         # not fall of screen from jumping
@@ -381,6 +386,8 @@ class main_menu:
     def __init__(self) -> None:
         self.menu_background = pygame.image.load('assets/main_background.png') #https://www.deviantart.com/albertov
         self.menu_background = pygame.transform.scale(self.menu_background, (1920, 1080))
+        self.bg_music = pygame.mixer.Sound('assets/menu.wav') # https://www.youtube.com/watch?v=tDHRpWNq2-s
+        self.bg_music.play(-1)
 
         self.base_font = pygame.font.Font(None, 140)
         self.text_surface = self.base_font.render("?", True, (255, 255, 255))
@@ -410,6 +417,7 @@ class main_menu:
             for event in events:
                 if event.type == KEYDOWN:
                         if event.key == pygame.K_w:
+                            self.bg_music.stop()
                             Game.set_screen(Level_1())
                 if event.type == MOUSEBUTTONDOWN:
                     if self.game2_button.collidepoint((mx, my)):
@@ -512,13 +520,15 @@ class win:
     def __init__(self, fighter_hp, boss_hp) -> None:
         self.base_font = pygame.font.Font(None, 100)
         self.base_font2 = pygame.font.Font(None, 75)
+        self.stat_font = pygame.font.Font(None, 25)
         self.text_surface = self.base_font.render("Congratulations you escaped :)", True, (0, 255, 0))
         self.text_surface2 = self.base_font2.render("Main Menu", True, (0, 0, 0))
         self.main_menu_button = pygame.Rect(800, 750, 300, 100) 
         self.click = False
-        self.fighter_hp = fighter_hp
-        self.boss_hp = boss_hp
-        self.stats_message = self.base_font.render('test')
+        stats = f'Boss HP: {max(0, boss_hp)}; Your HP: {fighter_hp}'
+        if fighter_hp == 100:
+            stats += '; WELL DONE YOU DODGED ALL ATTACKS LIKE A PRO!'
+        self.stat_message = self.stat_font.render(stats, True, (255, 255, 255))
 
     def handle_events(self, events: List[pygame.event.Event]) -> None:
         mx, my = pygame.mouse.get_pos()
@@ -540,6 +550,7 @@ class win:
         pygame.draw.rect(surface, (0, 255, 0), self.main_menu_button)
         surface.blit(self.text_surface, (475, 460))
         surface.blit(self.text_surface2, (813, 780))
+        surface.blit(self.stat_message, (400, 600))
         
 
 #================================================================================================
