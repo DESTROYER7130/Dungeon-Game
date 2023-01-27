@@ -1,6 +1,6 @@
 from typing import List
 from random import choice
-from time import sleep
+# from time import sleep
 
 import pygame
 from pygame.locals import K_ESCAPE, KEYDOWN, QUIT
@@ -27,7 +27,7 @@ def boss_ai(boss_move, boss_x, fighter_x, boss_speed, fighter_speed):
         boss_speed += 1
     return boss_move, boss_x, boss_speed
 
-# Ian titor gave template
+# sprite frames
 def get_sprite_frames(sprite_sheet, sprite_frame_size):
 
     sprite_sheet_width, sprite_sheet_height = sprite_sheet.get_size()
@@ -124,13 +124,13 @@ class Level_1:
                 'boss run': [8, 9, 10, 11, 12, 13, 14, 15],
                 'boss attack': [32, 33, 34, 35, 36, 37, 38, 39],
                 'boss dying': [48, 48, 48, 48, 48, 49, 49, 49, 49, 49, 50, 50, 50, 50, 50, 51, 51, 51, 51, 51, 52, 52, 52, 52, 52, 53, 53, 53, 53, 53],
-                'boss dead': [54]
-                }
+                'boss dead': [54]}
+
 
         #boss theme!!
         pygame.mixer.init()
-        self.bg_music = pygame.mixer.Sound('assets/theme.wav') # https://www.youtube.com/watch?v=1dSilEmz7FE
-        self.death_sound = pygame.mixer.Sound('assets/death.mp3')
+        self.bg_music = pygame.mixer.Sound('assets/theme.wav') # https://www.youtube.com/watch?v=tDHRpWNq2-s
+        self.death_sound = pygame.mixer.Sound('assets/death.wav')
         self.hits = []
         self.wooshes = []
         for i in range(4):
@@ -138,10 +138,10 @@ class Level_1:
             self.wooshes.append(pygame.mixer.Sound(f'assets/woosh_{i}.wav'))
         self.magics = []
         for i in range(3):
-            self.magics.append(pygame.mixer.Sound(f'assets/magic_{i}.mp3'))
+            self.magics.append(pygame.mixer.Sound(f'assets/magic_{i}.wav'))
         self.magics[-1].play(-1)
         self.magics[-1].set_volume(0)
-        self.special_hit = pygame.mixer.Sound('assets/special_hit.mp3')
+        self.special_hit = pygame.mixer.Sound('assets/special_hit.wav')
 
         self.bg_music.play(-1)
 
@@ -299,7 +299,8 @@ class Level_1:
             if self.jump_height < -10:
                 self.jumping = False
                 self.jump_height = 10
-#attacking/dmg
+
+        #attacking hitbox/dmg
         if self.attack_type:
             self.fighter_attacking = self.attack_type
             self.fighter_frame = 0
@@ -362,7 +363,7 @@ class Level_1:
         # surface.blit(self.boss_sprite, (self.boss_x, self.boss_y, 125, 250)) # the boss
 
         #attack circle effects/ hit markers
-        attack_color = [(255, 0, 0), (255, 255, 0)]
+        self.attack_color = [(255, 0, 0), (255, 255, 0)]
         if self.fighter_hit:
             self.fighter_hit = False
             # pygame.draw.circle(surface, (255, 255, 255), (self.fighter_x, self.fighter_y), 100)
@@ -391,7 +392,6 @@ class main_menu:
 
         self.green = 71, 148, 58
         self.red = 255, 0, 0
-        self.game1_button = pygame.Rect(50, 300, 100, 190) #delete later TEMP
         self.game2_button = pygame.Rect(20, 950, 100, 100) 
 
         self.click = False
@@ -417,8 +417,6 @@ class main_menu:
                         if event.key == pygame.K_w:
                             Game.set_screen(Level_1())
                 if event.type == MOUSEBUTTONDOWN:
-                    if self.game1_button.collidepoint((mx, my)):
-                        Game.set_screen(Level_1())
                     if self.game2_button.collidepoint((mx, my)):
                         Game.set_screen(instructions())
 
@@ -437,7 +435,6 @@ class main_menu:
         #title
         surface.blit(self.title, (self.title_x, int(self.title_y)))
 
-        pygame.draw.rect(surface, self.red, self.game1_button)
         pygame.draw.rect(surface, (0, 0, 0), self.game2_button)
         surface.blit(self.text_surface, (38, 960))
         
@@ -487,7 +484,7 @@ class lose:
 class instructions:
 
     def __init__(self) -> None:
-        self.controls = pygame.image.load('controls.png')
+        self.controls = pygame.image.load('assets/controls.png')
         self.controls = pygame.transform.scale(self.controls, (1920, 1080))
 
         self.base_font2 = pygame.font.Font(None, 75)
