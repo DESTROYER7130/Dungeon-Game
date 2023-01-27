@@ -183,10 +183,9 @@ class Level_1:
 
     def handle_events(self, events: List[pygame.event.Event]) -> None:
         for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            # if event.type == pygame.MOUSEBUTTONDOWN:
                 # Game.set_screen(ScreenTwo())
-                print('Click')
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
                     Game.set_screen(PauseScreen(self))
                     self.bg_music.set_volume(0)
@@ -208,14 +207,10 @@ class Level_1:
         
         # game (win or loss)
         if self.boss_hp <= 0:
-            print('fighter wins')
-            print(f'boss hp: {self.boss_hp}, fighter hp: {self.fighter_hp}')
             self.boss_alive = False
             #exit()
 
         if self.fighter_hp <= 0:
-            print('fighter loses')
-            print(f'boss hp: {self.boss_hp}, fighter hp: {self.fighter_hp}')
             self.fighter_alive = False
             Game.set_screen(lose())
             #exit()
@@ -271,9 +266,9 @@ class Level_1:
                 if keys[pygame.K_s]:
                     self.attack_type = 2
                     self.attack_cooldown = 100
-        if keys[pygame.K_b] and keys[pygame.K_y] and keys[pygame.K_r]:
+        if keys[pygame.K_i] and keys[pygame.K_a] and keys[pygame.K_n]:
             self.mortal = False
-        if keys[pygame.K_t] and keys[pygame.K_v] and keys[pygame.K_n]:
+        if keys[pygame.K_t] and keys[pygame.K_a] and keys[pygame.K_n]:
             self.mortal = True
 
 
@@ -286,7 +281,7 @@ class Level_1:
             if self.boss_alive:
                 self.fighter_x -= self.fighter_speed
             else:
-                Game.set_screen(win())
+                Game.set_screen(win(self.fighter_hp, self.boss_hp))
 
         
         # not fall of screen from jumping
@@ -514,13 +509,16 @@ class instructions:
 
 class win:
 
-    def __init__(self) -> None:
+    def __init__(self, fighter_hp, boss_hp) -> None:
         self.base_font = pygame.font.Font(None, 100)
         self.base_font2 = pygame.font.Font(None, 75)
         self.text_surface = self.base_font.render("Congratulations you escaped :)", True, (0, 255, 0))
         self.text_surface2 = self.base_font2.render("Main Menu", True, (0, 0, 0))
         self.main_menu_button = pygame.Rect(800, 750, 300, 100) 
         self.click = False
+        self.fighter_hp = fighter_hp
+        self.boss_hp = boss_hp
+        self.stats_message = self.base_font.render('test')
 
     def handle_events(self, events: List[pygame.event.Event]) -> None:
         mx, my = pygame.mouse.get_pos()
