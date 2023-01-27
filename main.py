@@ -6,6 +6,7 @@ import pygame
 from pygame.locals import K_ESCAPE, KEYDOWN, QUIT
 from pygame.locals import *
 from pygame import mixer
+import math
 
 clock = pygame.time.Clock()
 FPS = 60
@@ -14,6 +15,7 @@ FPS = 60
 def get_dist(x1, y1, x2, y2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** (1/2)
 
+# returm abs value for going left and right (negative or pos)
 def sign(x):
     return x / abs(x)
 
@@ -25,6 +27,7 @@ def boss_ai(boss_move, boss_x, fighter_x, boss_speed, fighter_speed):
         boss_speed += 1
     return boss_move, boss_x, boss_speed
 
+# Ian titor gave template
 def get_sprite_frames(sprite_sheet, sprite_frame_size):
 
     sprite_sheet_width, sprite_sheet_height = sprite_sheet.get_size()
@@ -42,6 +45,7 @@ def get_sprite_frames(sprite_sheet, sprite_frame_size):
             sprite_frames.append(sprite_frame)
 
     return sprite_frames
+
 
 class ScreenInterface:
 
@@ -126,7 +130,7 @@ class Level_1:
         #boss theme!!
         pygame.mixer.init()
         self.bg_music = pygame.mixer.Sound('assets/theme.wav') # https://www.youtube.com/watch?v=1dSilEmz7FE
-        self.death_sound = pygame.mixer.Sound('assets/death.mp3') 
+        self.death_sound = pygame.mixer.Sound('assets/death.mp3')
         self.hits = []
         self.wooshes = []
         for i in range(4):
@@ -146,7 +150,7 @@ class Level_1:
         self.boss_frame = 0
         self.base_font = pygame.font.Font(None, 35)
         self.base_font2 = pygame.font.Font(None, 35)
-        self.text_surface = self.base_font.render('GEORGE THE EAT OF WORLDS', True, (255, 255, 255))
+        self.text_surface = self.base_font.render('GEORGE THE EATER OF WORLDS', True, (255, 255, 255))
         self.text_surface2 = self.base_font2.render('DESTOYER7130', True, (255, 255, 255))
         self.ground = 965
         self.fighter_x = 10
@@ -176,22 +180,6 @@ class Level_1:
         self.start_dying = True
         self.mortal = True
 
-        '''
-        # Create a list to hold the individual sprites
-        self.sprites = []
-
-        # Create a variable to keep track of the current sprite index
-        self.current_sprite_index = 0
-
-        # Define the number of rows and columns in the sprite sheet
-        self.rows = 7
-        self.columns = 10
-
-        # Define the size of each sprite
-        self.sprite_width = self.fighter_sprite.get_width() // self.columns
-        self.sprite_height = self.fighter_sprite.get_height() // self.rows
-        '''
-
 
     def handle_events(self, events: List[pygame.event.Event]) -> None:
         for event in events:
@@ -202,13 +190,6 @@ class Level_1:
                 if event.key == pygame.K_p:
                     Game.set_screen(PauseScreen(self))
                     self.bg_music.set_volume(0)
-
-        '''
-        # Update the current sprite index
-        self.current_sprite_index += 1
-        if self.current_sprite_index >= len(self.sprites):
-            self.current_sprite_index = 0
-        '''
         
 
     def update(self) -> None:
@@ -224,16 +205,6 @@ class Level_1:
             self.magics[-1].stop()
         else:
             self.bg_music.set_volume(1)
-
-        '''
-        # Extract the individual sprites from the sprite sheet and add them to the sprites list 
-        for row in range(self.rows):
-            for col in range(self.columns):
-                x = col * self.sprite_width
-                y = row * self.sprite_height
-                sprite = self.fighter_sprite.subsurface((x, y, self.sprite_width, self.sprite_height))
-                self.sprites.append(sprite)
-        '''
         
         # game (win or loss)
         if self.boss_hp <= 0:
@@ -412,48 +383,63 @@ class Level_1:
 class main_menu:
 
     def __init__(self) -> None:
-        self.circle_x = 500
-        self.circle_y = 100
-        self.black = (0, 0, 0)
-        self.blue = 0, 255, 0
+        self.menu_background = pygame.image.load('assets/main_background.png') #https://www.deviantart.com/albertov
+        self.menu_background = pygame.transform.scale(self.menu_background, (1920, 1080))
+
+        self.base_font = pygame.font.Font(None, 140)
+        self.text_surface = self.base_font.render("?", True, (255, 255, 255))
+
         self.green = 71, 148, 58
-        self.yellow = 255, 223, 0
         self.red = 255, 0, 0
-        self.game1_button = pygame.Rect(50, 300, 100, 190)
-        self.game2_button = pygame.Rect(175, 425, 150, 65)
-        self.game3_button = pygame.Rect(425, 425, 150, 65)
-        self.game4_button = pygame.Rect(600, 325, 100, 165)
+        self.game1_button = pygame.Rect(50, 300, 100, 190) #delete later TEMP
+        self.game2_button = pygame.Rect(20, 950, 100, 100) 
+
         self.click = False
+        
+        self.speed = 0.05
+        self.amplitude = 20
+        self.angle = 0
+        self.title_x = 550
+        self.title_y = 0
 
         #main menu stuff(title and whatnot)
         self.title = pygame.image.load('assets/title.png')
         self.title = pygame.transform.scale(self.title, (800, 800))
 
+        self.menu_word = pygame.image.load('assets/main_menu_word.png')
+        self.menu_word = pygame.transform.scale(self.menu_word, (800, 800))
+
     def handle_events(self, events: List[pygame.event.Event]) -> None:
             clock.tick(FPS)
             mx, my = pygame.mouse.get_pos()
             for event in events:
+                if event.type == KEYDOWN:
+                        if event.key == pygame.K_w:
+                            Game.set_screen(Level_1())
                 if event.type == MOUSEBUTTONDOWN:
                     if self.game1_button.collidepoint((mx, my)):
                         Game.set_screen(Level_1())
                     if self.game2_button.collidepoint((mx, my)):
-                        Game.set_screen(lose())
-                    if self.game3_button.collidepoint((mx, my)):
-                        Game.set_screen(Level_3())
-                    if self.game4_button.collidepoint((mx, my)):
-                        Game.set_screen(win())
+                        Game.set_screen(instructions())
 
 
     def update(self) -> None:
-        ...
+        self.angle += self.speed
+        self.title_y = self.amplitude * math.sin(self.angle) + 100
 
     def draw(self, surface: pygame.Surface) -> None:
         surface.fill((255, 255, 255))  # always the first drawing command
-        surface.blit(self.title, (550, 50))
+
+        #menu background
+        surface.blit(self.menu_background, (0,0)) 
+        surface.blit(self.menu_word, (670, 450)) 
+
+        #title
+        surface.blit(self.title, (self.title_x, int(self.title_y)))
+
         pygame.draw.rect(surface, self.red, self.game1_button)
-        pygame.draw.rect(surface, self.blue, self.game2_button)
-        pygame.draw.rect(surface, self.yellow, self.game3_button)
-        pygame.draw.rect(surface, self.green, self.game4_button)
+        pygame.draw.rect(surface, (0, 0, 0), self.game2_button)
+        surface.blit(self.text_surface, (38, 960))
         
 
 #================================================================================================
@@ -464,9 +450,9 @@ class lose:
     def __init__(self) -> None:
         self.base_font = pygame.font.Font(None, 150)
         self.base_font2 = pygame.font.Font(None, 75)
-        self.text_surface = self.base_font.render('YOU DIED.', True, (255, 0, 0))
-        self.text_surface2 = self.base_font2.render('Main Menu', True, (0, 0, 255))
-        self.text_surface3 = self.base_font2.render('Retry?', True, (0, 0, 255))
+        self.text_surface = self.base_font.render("YOU DIED.", True, (255, 0, 0))
+        self.text_surface2 = self.base_font2.render("Main Menu", True, (0, 0, 255))
+        self.text_surface3 = self.base_font2.render("Retry?", True, (0, 0, 255))
         self.main_menu_button = pygame.Rect(600, 750, 300, 100) 
         self.retry_button = pygame.Rect(1000, 750, 300, 100) 
         self.click = False
@@ -496,38 +482,46 @@ class lose:
         surface.blit(self.text_surface2, (615, 780))
         surface.blit(self.text_surface3, (1075, 780))
 
-
 #================================================================================================
 
-
-class Level_3:
+class instructions:
 
     def __init__(self) -> None:
-        self.circle_x = 500
-        self.circle_y = 100
+        self.controls = pygame.image.load('controls.png')
+        self.controls = pygame.transform.scale(self.controls, (1920, 1080))
+
+        self.base_font2 = pygame.font.Font(None, 75)
+        self.text_surface2 = self.base_font2.render("Go Back", True, (255, 255, 255))
+        self.main_menu_button = pygame.Rect(800, 970, 300, 100) 
+        self.click = False
 
     def handle_events(self, events: List[pygame.event.Event]) -> None:
-        ...
+        mx, my = pygame.mouse.get_pos()
+        for event in events:
+            if event.type == MOUSEBUTTONDOWN:
+                if self.main_menu_button.collidepoint((mx, my)):
+                    Game.set_screen(main_menu())
+          
+          
 
     def update(self) -> None:
-        self.circle_y += 1
+        ...
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((0, 0, 255))  # always the first drawing command
-        pygame.draw.circle(surface, (0, 255, 0),
-                           (self.circle_x, self.circle_y), 30)
-
-
+        surface.fill((0, 0, 0))  # always the first drawing command
+        surface.blit(self.controls, (0,0))
+        pygame.draw.rect(surface, (0, 0, 0), self.main_menu_button)
+        surface.blit(self.text_surface2, (840, 1000))
+        
 #================================================================================================
-
 
 class win:
 
     def __init__(self) -> None:
         self.base_font = pygame.font.Font(None, 100)
         self.base_font2 = pygame.font.Font(None, 75)
-        self.text_surface = self.base_font.render('Congratulations you escaped :)', True, (0, 255, 0))
-        self.text_surface2 = self.base_font2.render('Main Menu', True, (0, 0, 0))
+        self.text_surface = self.base_font.render("Congratulations you escaped :)", True, (0, 255, 0))
+        self.text_surface2 = self.base_font2.render("Main Menu", True, (0, 0, 0))
         self.main_menu_button = pygame.Rect(800, 750, 300, 100) 
         self.click = False
 
@@ -599,7 +593,6 @@ class Game:
         pygame.quit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     game = Game()
     game.run()
-  
