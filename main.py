@@ -99,7 +99,6 @@ class Level_1:
     def __init__(self) -> None:
         #  sprites and background
         self.background = pygame.image.load('assets/battle_background.jpg')
-        self.background = pygame.transform.scale(self.background, (1920, 1080))
         # <a href="https://www.freepik.com/free-vector/ancient-architecture-with-arches-torches_22444977.htm#query=dungeon%20background&position=0&from_view=keyword">Image by upklyak</a> on Freepik
 
         #sprite sheets
@@ -273,6 +272,7 @@ class Level_1:
             self.toggle.play()
         if keys[pygame.K_t] and keys[pygame.K_a] and keys[pygame.K_n]:
             self.mortal = True
+            self.background = pygame.image.load('assets/battle_background.jpeg')
             self.toggle.play()
 
 
@@ -329,6 +329,7 @@ class Level_1:
 
 
     def draw(self, surface: pygame.Surface) -> None:
+        self.background = pygame.transform.scale(self.background, (1920, 1080))
         surface.blit(self.background, (0,0))
 
         pygame.draw.rect(surface, (100, 100, 100), (20, 20, 540, 50)) # main fighter hp background
@@ -518,10 +519,11 @@ class instructions:
 class win:
 
     def __init__(self, fighter_hp, boss_hp) -> None:
+        self.background = pygame.image.load('assets/win.png')
         self.base_font = pygame.font.Font(None, 100)
         self.base_font2 = pygame.font.Font(None, 75)
         self.stat_font = pygame.font.Font(None, 25)
-        self.text_surface = self.base_font.render("Congratulations you escaped :)", True, (0, 255, 0))
+        #self.text_surface = self.base_font.render("Congratulations you escaped :)", True, (0, 255, 0))
         self.text_surface2 = self.base_font2.render("Main Menu", True, (0, 0, 0))
         self.main_menu_button = pygame.Rect(800, 750, 300, 100) 
         self.click = False
@@ -543,14 +545,13 @@ class win:
         ...
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((0, 0, 0))  # always the first drawing command
+        surface.blit(self.background, (0,0))
         # pygame.draw.rect(surface, (255, 0, 0), (255, 420, 800, 200))
-        pygame.draw.rect(surface, (100, 100, 100), (255, 420, 1410, 150)) # input box outline
-        pygame.draw.rect(surface, (255, 255, 255), (260, 425, 1400, 140)) # input box inner 
+        #pygame.draw.rect(surface, (100, 100, 100), (255, 420, 1410, 150)) # input box outline
+        #pygame.draw.rect(surface, (255, 255, 255), (260, 425, 1400, 140)) # input box inner 
         pygame.draw.rect(surface, (0, 255, 0), self.main_menu_button)
-        surface.blit(self.text_surface, (475, 460))
         surface.blit(self.text_surface2, (813, 780))
-        surface.blit(self.stat_message, (400, 600))
+        surface.blit(self.stat_message, (400, 900))
         
 
 #================================================================================================
